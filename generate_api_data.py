@@ -187,7 +187,7 @@ def generate_latest_listings():
     }
 
     priority_columns = ['Manufacturer', 'Model', 'Year', 'Price', 'Mileage', 'Damage description', 'Link']
-    other_columns = [col for col in df.columns if col not in priority_columns]
+    other_columns = [col for col in df.columns if col not in priority_columns and col not in ('Price_Clean', 'Mileage_Clean')]
     columns_order = priority_columns + other_columns
     display_data = df[columns_order].copy()
 
@@ -196,8 +196,6 @@ def generate_latest_listings():
         listing = {}
         for col in columns_order:
             listing[col] = str(row[col]) if pd.notna(row[col]) else ''
-        listing['Price_Clean'] = float(row['Price_Clean']) if pd.notna(row.get('Price_Clean')) else None
-        listing['Mileage_Clean'] = float(row['Mileage_Clean']) if pd.notna(row.get('Mileage_Clean')) else None
         listings.append(listing)
 
     return {'stats': stats, 'columns': columns_order, 'listings': listings, 'count': len(listings)}
