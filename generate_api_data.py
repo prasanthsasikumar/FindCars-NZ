@@ -186,7 +186,7 @@ def generate_latest_listings():
         'top_manufacturer': str(df['Manufacturer'].mode()[0]) if not df.empty else 'N/A'
     }
 
-    priority_columns = ['Manufacturer', 'Model', 'Price', 'Mileage', 'Damage description', 'Link']
+    priority_columns = ['Manufacturer', 'Model', 'Year', 'Price', 'Mileage', 'Damage description', 'Link']
     other_columns = [col for col in df.columns if col not in priority_columns]
     columns_order = priority_columns + other_columns
     display_data = df[columns_order].copy()

@@ -1,4 +1,5 @@
 from calendar import c
+import re
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
@@ -96,6 +97,12 @@ while current_page <= number_of_pages:
     # Find all the <li> elements with class "vehicle-item"
     list_items = vehicle_list_section.find_all("li", class_="vehicle-item")
 
+    def extract_year_from_link(link):
+        """Extract the vehicle year from the link URL.
+        Example: /000000000006640234/2004-nissan-... -> 2004"""
+        match = re.search(r'/(\d{4})-', link)
+        return match.group(1) if match else 'N/A'
+
     def return_JSON_values(json_data, parameter):
         data = json.loads(json_data)
         details = data['Vehicle Details']
@@ -182,6 +189,7 @@ while current_page <= number_of_pages:
             car_data = {
                 'Manufacturer': return_JSON_values(json_data, "Make"),
                 'Model': return_JSON_values(json_data, "Model"),
+                'Year': extract_year_from_link(href),
                 'Registration Status': return_JSON_values(json_data, "Registration Status"),
                 'Price': price,
                 'Mileage': return_JSON_values(json_data, "Odometer"),

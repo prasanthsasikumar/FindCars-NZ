@@ -10,7 +10,7 @@ class CarDataWriter:
         print("Initializing CSV file...")
         self.file = open(self.filename, 'w', newline='')
         self.writer = csv.DictWriter(self.file, fieldnames=[
-            'Manufacturer', 'Model', 'Registration Status', 'Price', 'Mileage',
+            'Manufacturer', 'Model', 'Year', 'Registration Status', 'Price', 'Mileage',
             'Keys', 'Damage description', 'Transmission', 'Seats', 'Fuel Type', 'Link'
         ])
         self.writer.writeheader()
@@ -33,6 +33,7 @@ if __name__ == '__main__':
     car_data = {
         'Manufacturer': 'Ford',
         'Model': 'Mustang',
+        'Year': '2020',
         'Registration Status': 'Registered',
         'Price': 25000,
         'Mileage': 50000,
