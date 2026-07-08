@@ -1,10 +1,25 @@
 <!DOCTYPE html>
-<html lang="en" class="">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="NZ damaged vehicle auction analytics — Manheim NZ data, daily updates, interactive charts, REST API.">
-    <title>CarAuction Analytics NZ</title>
+    <meta name="description" content="FindCars NZ — daily-scraped Manheim NZ damaged-vehicle auction data. 3+ years of listings, interactive analytics, open CSVs, and a free JSON API.">
+    <meta property="og:title" content="FindCars NZ — Auction Analytics">
+    <meta property="og:description" content="Daily-scraped NZ salvage auction data: interactive charts, open datasets, and a free API.">
+    <meta property="og:url" content="https://findcars.prasanthsasikumar.com">
+    <title>FindCars NZ — Auction Analytics</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚗</text></svg>">
+    <script>
+        // Set theme before first paint: URL ?theme= param > saved choice > OS preference
+        (function () {
+            try {
+                var q = new URLSearchParams(location.search).get('theme');
+                var saved = localStorage.getItem('theme');
+                var dark = q ? q === 'dark' : (saved ? saved === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches);
+                if (dark) document.documentElement.classList.add('dark');
+            } catch (e) {}
+        })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -14,104 +29,185 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         :root {
-            --p: #5667cc; --ph: #4c5bba; --s: #CCE8C9;
+            --p: #5667cc; --ph: #4c5bba; --p-text: #5667cc;
+            --bg: #ffffff; --bg-alt: #f8fafb;
+            --hero-grad: linear-gradient(180deg, #f8faff 0%, #ffffff 100%);
             --heading: #16181B; --body: #494B5B; --muted: #6b7280;
-            --b: #e5e7eb; --bl: #d1d5db;
+            --card-bg: #ffffff; --card-border: #e5e7eb; --card-border-hover: #d1d5db;
+            --card-shadow: 0 8px 25px rgba(0,0,0,.06);
+            --nav-bg: rgba(255,255,255,.75);
+            --code-bg: #eef2ff; --pre-bg: #1e293b;
+            --endpoint-bg: #f8fafb; --endpoint-hover: #eef2ff;
+            --input-bg: #ffffff;
+        }
+        html.dark {
+            --p: #6b7ce8; --ph: #8b98f0; --p-text: #93a0f2;
+            --bg: #000000; --bg-alt: #0b0b0e;
+            --hero-grad: linear-gradient(180deg, #0c0f22 0%, #000000 100%);
+            --heading: #ffffff; --body: #c9cbd6; --muted: #9ca3af;
+            --card-bg: rgba(255,255,255,.03); --card-border: rgba(255,255,255,.1); --card-border-hover: rgba(255,255,255,.22);
+            --card-shadow: 0 8px 25px rgba(0,0,0,.45);
+            --nav-bg: rgba(0,0,0,.55);
+            --code-bg: rgba(107,124,232,.14); --pre-bg: #0d1424;
+            --endpoint-bg: rgba(255,255,255,.03); --endpoint-hover: rgba(107,124,232,.1);
+            --input-bg: rgba(255,255,255,.06);
         }
         * { margin:0; padding:0; box-sizing:border-box }
         html { scroll-behavior: smooth }
         body {
             font-family: 'Sora', 'Inter', system-ui, -apple-system, sans-serif;
-            background: #fff; color: var(--body); line-height: 1.7;
+            background: var(--bg); color: var(--body); line-height: 1.7;
             -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+            transition: background .3s, color .3s;
         }
-        .mw { max-width: 1280px; margin: 0 auto; padding: 0 32px }
+        ::selection { background: var(--p); color: #fff }
+        html.dark ::selection { background: #fff; color: #000 }
+        .mw { max-width: 1400px; margin: 0 auto; padding: 0 32px }
         @media (max-width: 768px) { .mw { padding: 0 20px } }
 
-        /* Nav */
-        .nav { position: sticky; top: 0; z-index: 50; padding: 0 32px; background: rgba(255,255,255,.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--b) }
-        .nav.scrolled { box-shadow: 0 1px 0 rgba(0,0,0,.04) }
-        .nav .inner { display: flex; align-items: center; justify-content: space-between; height: 56px; max-width: 1280px; margin: 0 auto }
-        .nav .logo { font-weight: 700; font-size: 1rem; color: var(--heading); text-decoration: none; letter-spacing: -.2px }
-        .nav .logo i { color: var(--p); margin-right: 7px }
-        .nav .gh { color: var(--muted); text-decoration: none; font-weight: 500; font-size: 1.05rem; transition: color .2s }
-        .nav .gh:hover { color: var(--p) }
-        .nav-links { display: flex; align-items: center; gap: 28px }
+        /* ── Nav: fixed, transparent → glass on scroll (FlowsXR) ── */
+        .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; padding: 0 32px; background: transparent; transition: background .3s, box-shadow .3s, border-color .3s; border-bottom: 1px solid transparent }
+        .nav.scrolled { background: var(--nav-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom-color: var(--card-border); box-shadow: 0 1px 12px rgba(0,0,0,.05) }
+        .nav .inner { display: flex; align-items: center; justify-content: space-between; height: 60px; max-width: 1400px; margin: 0 auto; gap: 20px }
+        .nav .logo { font-weight: 700; font-size: 1.05rem; color: var(--heading); text-decoration: none; letter-spacing: -.2px; white-space: nowrap }
+        .nav .logo i { color: var(--p); margin-right: 8px }
+        .nav-links { display: flex; align-items: center; gap: 26px; margin-left: auto }
         .nav-links a { color: var(--muted); text-decoration: none; font-weight: 500; font-size: .88rem; transition: color .15s }
-        .nav-links a:hover { color: var(--p) }
-        @media (max-width: 768px) { .nav-links { display: none } .nav { padding: 0 20px } }
+        .nav-links a:hover { color: var(--p-text) }
+        .nav-right { display: flex; align-items: center; gap: 14px }
+        .nav .gh { color: var(--muted); text-decoration: none; font-size: 1.1rem; transition: color .2s }
+        .nav .gh:hover { color: var(--p-text) }
+        @media (max-width: 900px) { .nav-links { display: none } .nav { padding: 0 20px } }
 
-        /* Hero */
-        .hero { padding: 88px 0 56px; text-align: center; background: linear-gradient(180deg, #f8faff 0%, #fff 100%) }
-        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 600; color: var(--heading); letter-spacing: -.8px; line-height: 1.08; max-width: 800px; margin: 0 auto }
-        .hero p { color: var(--body); font-size: clamp(1rem, 2vw, 1.18rem); line-height: 1.6; margin: 16px auto 0; max-width: 580px }
-        .hero .kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin: 40px auto 0; max-width: 760px }
-        .hero .kpi { background: #fff; border: 1px solid var(--b); border-radius: 16px; padding: 20px 12px; transition: transform .2s, box-shadow .2s }
-        .hero .kpi:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,.06) }
-        .hero .kpi .v { font-size: clamp(1.4rem, 3vw, 1.85rem); font-weight: 700; color: var(--p); letter-spacing: -.3px }
-        .hero .kpi .l { font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-top: 2px }
-        @media (max-width: 768px) { .hero { padding: 56px 0 40px } .hero .kpi-row { grid-template-columns: repeat(2,1fr) } }
+        /* Theme toggle pill (FlowsXR) */
+        .theme-toggle { position: relative; width: 56px; height: 28px; border-radius: 999px; background: #e5e7eb; border: 1px solid #d1d5db; cursor: pointer; transition: background .3s, border-color .3s; flex-shrink: 0 }
+        html.dark .theme-toggle { background: #1f2937; border-color: rgba(255,255,255,.15) }
+        .theme-toggle .knob { position: absolute; top: 50%; left: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--p); transform: translate(3px,-50%); display: flex; align-items: center; justify-content: center; transition: transform .3s, background .3s; box-shadow: 0 1px 3px rgba(0,0,0,.2) }
+        html.dark .theme-toggle .knob { transform: translate(31px,-50%); background: #fff }
+        .theme-toggle svg { width: 12px; height: 12px }
+        .theme-toggle .ico-sun { display: block; color: #fff }
+        .theme-toggle .ico-moon { display: none; color: #000 }
+        html.dark .theme-toggle .ico-sun { display: none }
+        html.dark .theme-toggle .ico-moon { display: block }
 
-        /* Section */
-        .section { padding: 80px 0; scroll-margin-top: 72px }
-        .section.alt { background: #f8fafb; border-top: 1px solid var(--b); border-bottom: 1px solid var(--b); scroll-margin-top: 72px }
-        .section-label { font-size: .78rem; font-weight: 600; color: var(--p); text-transform: uppercase; letter-spacing: 1.8px; margin-bottom: 8px }
-        .section h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 600; color: var(--heading); letter-spacing: -.4px; margin-bottom: 12px }
-        .section .sub { color: var(--body); font-size: 1.02rem; line-height: 1.6; max-width: 600px; margin-bottom: 32px }
+        /* ── Hero: two-column, compact ── */
+        .hero { padding: 116px 0 56px; background: var(--hero-grad) }
+        .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 56px; align-items: center }
+        .hero h1 { font-size: clamp(1.9rem, 4vw, 3rem); font-weight: 600; color: var(--heading); letter-spacing: -.8px; line-height: 1.12 }
+        .hero .lede { font-size: clamp(.98rem, 1.6vw, 1.12rem); line-height: 1.65; margin-top: 16px; max-width: 560px }
+        .hero .facts { margin-top: 14px; font-size: .84rem; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+        .hero .facts .dot { opacity: .5 }
+        .cta { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap }
+        .btn-p, .btn-o { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; font-weight: 600; font-size: .9rem; text-decoration: none; transition: transform .25s, box-shadow .25s, background .25s, color .25s; border: 2px solid transparent }
+        .btn-p { background: var(--p); color: #fff }
+        .btn-p:hover { background: var(--ph); color: #fff; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(86,103,204,.3) }
+        .btn-o { background: transparent; color: var(--p-text); border-color: var(--p) }
+        .btn-o:hover { background: var(--p); color: #fff; transform: translateY(-2px) }
+        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px }
+        .kpi { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px 18px; transition: transform .2s, box-shadow .2s, border-color .2s }
+        .kpi:hover { transform: translateY(-2px); box-shadow: var(--card-shadow); border-color: var(--card-border-hover) }
+        .kpi .v { font-size: clamp(1.35rem, 2.4vw, 1.8rem); font-weight: 700; color: var(--p-text); letter-spacing: -.3px }
+        .kpi .l { font-size: .7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-top: 2px }
+        .kpi-note { grid-column: 1 / -1; text-align: right; font-size: .72rem; color: var(--muted) }
+        @media (max-width: 900px) {
+            .hero { padding: 96px 0 44px }
+            .hero-grid { grid-template-columns: 1fr; gap: 32px }
+        }
+
+        /* ── Sections ── */
+        .section { padding: 60px 0; scroll-margin-top: 68px }
+        .section.alt { background: var(--bg-alt); border-top: 1px solid var(--card-border); border-bottom: 1px solid var(--card-border) }
+        .section-label { font-size: .76rem; font-weight: 600; color: var(--p-text); text-transform: uppercase; letter-spacing: 1.8px; margin-bottom: 6px }
+        .section h2 { font-size: clamp(1.45rem, 2.6vw, 1.9rem); font-weight: 600; color: var(--heading); letter-spacing: -.4px; margin-bottom: 8px }
+        .section .sub { font-size: .98rem; line-height: 1.6; max-width: 640px; margin-bottom: 26px }
+        .section .sub a { color: var(--p-text); font-weight: 500; text-decoration: none }
+        .section .sub a:hover { text-decoration: underline }
 
         /* Cards */
-        .card { background: #fff; border: 1px solid var(--b); border-radius: 20px; padding: 28px; }
-        .card-sm { padding: 20px; border-radius: 16px }
+        .card2 { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 26px; transition: border-color .2s }
+        html.dark .card2 { backdrop-filter: blur(20px) }
 
         /* Chart grid */
-        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 18px }
-        .chart-box { background: #fff; border: 1px solid var(--b); border-radius: 20px; padding: 24px; transition: transform .2s, box-shadow .2s }
-        .chart-box:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,.05) }
-        .chart-box h4 { font-size: .9rem; font-weight: 600; color: var(--heading); margin-bottom: 18px }
-        .chart-box canvas { max-height: 300px }
+        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px }
+        .chart-box { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 22px; transition: transform .2s, box-shadow .2s, border-color .2s }
+        .chart-box:hover { transform: translateY(-2px); box-shadow: var(--card-shadow); border-color: var(--card-border-hover) }
+        .chart-box h4 { font-size: .9rem; font-weight: 600; color: var(--heading); margin-bottom: 16px }
+        .chart-box canvas { max-height: 290px }
         .chart-full { grid-column: 1 / -1 }
         @media (max-width: 768px) { .chart-grid { grid-template-columns: 1fr } }
 
         /* Listings table */
-        #listingTable { font-size: .82rem; width: 100% !important }
-        #listingTable thead th { background: #f8fafb; font-size: .76rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; white-space: nowrap; padding: 10px 12px; border-bottom: 2px solid var(--b) }
-        #listingTable tbody td { padding: 8px 12px; vertical-align: middle; border-bottom: 1px solid #f3f4f6 }
-        #listingTable tbody tr:hover { background: rgba(86,103,204,.04) }
+        #listingTable { font-size: .82rem; width: 100% !important; --bs-table-bg: transparent; --bs-table-color: var(--body); --bs-table-hover-color: var(--body); --bs-table-hover-bg: rgba(86,103,204,.05); color: var(--body); border-color: var(--card-border) }
+        html.dark #listingTable { --bs-table-hover-bg: rgba(107,124,232,.08) }
+        #listingTable thead th { background: var(--bg-alt); font-size: .74rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; white-space: nowrap; padding: 10px 12px; border-bottom: 2px solid var(--card-border) }
+        #listingTable tbody td { padding: 8px 12px; vertical-align: middle; border-bottom: 1px solid var(--card-border); color: var(--body) }
+        #listingTable a { color: var(--p-text); font-weight: 500; text-decoration: none }
         .table-controls { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; flex-wrap: wrap }
         .form-check { margin: 0 !important }
+        .form-check-input { background-color: var(--input-bg); border-color: var(--card-border) }
+        .form-check-input:checked { background-color: var(--p); border-color: var(--p) }
         .form-check-label { font-size: .88rem; color: var(--body); font-weight: 500; cursor: pointer }
-        .dataTables_wrapper .dataTables_length,
-        .dataTables_wrapper .dataTables_filter { font-size: .82rem; margin-bottom: 8px }
-        .dataTables_wrapper .dataTables_length select,
-        .dataTables_wrapper .dataTables_filter input { border: 1px solid var(--b); border-radius: 8px; padding: 4px 8px; font-size: .82rem }
+        .dataTables_wrapper { color: var(--muted) }
+        .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter { font-size: .82rem; margin-bottom: 8px; color: var(--muted) }
+        .dataTables_wrapper .dataTables_info { font-size: .8rem; color: var(--muted) }
+        .dataTables_wrapper .dataTables_length select, .dataTables_wrapper .dataTables_filter input { border: 1px solid var(--card-border); border-radius: 8px; padding: 4px 8px; font-size: .82rem; background: var(--input-bg); color: var(--body) }
         .dataTables_wrapper .dataTables_paginate { font-size: .82rem }
-        .dataTables_wrapper .page-link { border-radius: 8px !important; margin: 0 2px }
+        .dataTables_wrapper .page-link { border-radius: 8px !important; margin: 0 2px; background: transparent; color: var(--body); border-color: var(--card-border) }
+        .dataTables_wrapper .page-item.active .page-link { background: var(--p); border-color: var(--p); color: #fff }
+        .dataTables_wrapper .page-item.disabled .page-link { background: transparent; color: var(--muted); border-color: var(--card-border) }
 
-        /* API endpoints */
-        .endpoint { background: #f8fafb; border-left: 3px solid var(--p); padding: 18px 20px; margin-bottom: 10px; border-radius: 0 12px 12px 0; transition: background .2s }
-        .endpoint:hover { background: #eef2ff }
-        .endpoint h5 { font-size: .92rem; font-weight: 600; color: var(--heading); margin-bottom: 4px }
-        .endpoint p { font-size: .84rem; color: var(--muted); margin: 0 }
-        .badge-get { display: inline-block; background: #22c55e; color: #fff; padding: 2px 10px; border-radius: 999px; font-size: .66rem; font-weight: 700; margin-right: 8px; text-transform: uppercase; vertical-align: 1px }
-
-        /* Code */
-        pre { background: #1e293b; color: #e2e8f0; padding: 16px 20px; border-radius: 12px; overflow-x: auto; font-size: .82rem; line-height: 1.6; margin: 12px 0 0 }
+        /* API */
+        .api-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start }
+        @media (max-width: 900px) { .api-grid { grid-template-columns: 1fr } }
+        .endpoint { background: var(--endpoint-bg); border-left: 3px solid var(--p); padding: 15px 18px; margin-bottom: 10px; border-radius: 0 12px 12px 0; transition: background .2s }
+        .endpoint:last-child { margin-bottom: 0 }
+        .endpoint:hover { background: var(--endpoint-hover) }
+        .endpoint h5 { font-size: .9rem; font-weight: 600; color: var(--heading); margin-bottom: 3px }
+        .endpoint p { font-size: .82rem; color: var(--muted); margin: 0 }
+        .badge-get { display: inline-block; background: #1baf7a; color: #fff; padding: 2px 10px; border-radius: 999px; font-size: .64rem; font-weight: 700; margin-right: 8px; text-transform: uppercase; vertical-align: 1px }
+        pre { background: var(--pre-bg); color: #e2e8f0; padding: 15px 18px; border-radius: 12px; overflow-x: auto; font-size: .8rem; line-height: 1.6; margin: 12px 0 0 }
         pre code { background: none; color: inherit; padding: 0; font-size: inherit }
-        code { font-size: .84rem; background: #eef2ff; padding: 2px 6px; border-radius: 4px; color: var(--p); font-weight: 500 }
+        code { font-size: .84rem; background: var(--code-bg); padding: 2px 6px; border-radius: 4px; color: var(--p-text); font-weight: 500 }
+        .link-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-top: 18px }
+        .link-card { display: flex; align-items: center; gap: 12px; padding: 16px 18px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; text-decoration: none; color: var(--heading); font-weight: 600; font-size: .88rem; transition: transform .2s, box-shadow .2s, border-color .2s }
+        .link-card:hover { transform: translateY(-2px); box-shadow: var(--card-shadow); border-color: var(--p); color: var(--p-text) }
+        .link-card i { color: var(--p-text); font-size: 1.15rem; width: 24px; text-align: center; flex-shrink: 0 }
+        .link-card .note { font-weight: 400; font-size: .76rem; color: var(--muted); margin-left: auto }
 
-        /* Data links */
-        .link-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px }
-        .link-card { display: flex; align-items: center; gap: 12px; padding: 18px 20px; background: #fff; border: 1px solid var(--b); border-radius: 16px; text-decoration: none; color: var(--heading); font-weight: 600; font-size: .9rem; transition: transform .2s, box-shadow .2s, border-color .2s }
-        .link-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,.05); border-color: var(--p); color: var(--p) }
-        .link-card i { color: var(--p); font-size: 1.2rem; width: 24px; text-align: center; flex-shrink: 0 }
-        .link-card .sub { font-weight: 400; font-size: .78rem; color: var(--muted); margin-left: auto }
+        /* Story cards */
+        .story-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px }
+        .story-card { display: flex; flex-direction: column; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 24px; text-decoration: none; transition: transform .2s, box-shadow .2s, border-color .2s }
+        .story-card:hover { transform: translateY(-3px); box-shadow: var(--card-shadow); border-color: var(--p) }
+        .story-card .part { font-size: .7rem; font-weight: 700; color: var(--p-text); text-transform: uppercase; letter-spacing: 1.4px; margin-bottom: 10px }
+        .story-card h3 { font-size: 1.02rem; font-weight: 600; color: var(--heading); line-height: 1.35; margin-bottom: 8px }
+        .story-card p { font-size: .84rem; color: var(--muted); line-height: 1.55; flex: 1 }
+        .story-card .go { margin-top: 14px; font-size: .82rem; font-weight: 600; color: var(--p-text) }
+        .story-card.tool { border-color: var(--p) }
+        .story-card.tool .part { color: #1baf7a }
 
-        /* Info banner */
-        .info { background: #eef2ff; border-left: 3px solid var(--p); padding: 14px 18px; border-radius: 0 12px 12px 0; font-size: .88rem; color: var(--body); margin-bottom: 20px }
+        /* Garage strip */
+        .garage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px }
+        .gcar { display: block; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; overflow: hidden; text-decoration: none; transition: transform .2s, box-shadow .2s, border-color .2s }
+        .gcar:hover { transform: translateY(-3px); box-shadow: var(--card-shadow); border-color: var(--p) }
+        .gcar img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block }
+        .gcar .cap { padding: 10px 14px 12px }
+        .gcar .cap .n { font-size: .86rem; font-weight: 600; color: var(--heading); line-height: 1.3 }
+        .gcar .cap .y { font-size: .74rem; color: var(--muted) }
 
         /* Footer */
-        footer { padding: 32px 0; text-align: center; color: var(--muted); font-size: .82rem; border-top: 1px solid var(--b) }
-        footer a { color: var(--p); text-decoration: none; font-weight: 500 }
+        footer { border-top: 1px solid var(--card-border); padding: 44px 0 28px; scroll-margin-top: 68px }
+        .foot-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 40px; margin-bottom: 28px }
+        @media (max-width: 768px) { .foot-grid { grid-template-columns: 1fr; gap: 24px } }
+        .foot-brand { font-weight: 700; color: var(--heading); font-size: 1rem; margin-bottom: 10px }
+        .foot-brand i { color: var(--p); margin-right: 7px }
+        footer p { font-size: .84rem; color: var(--muted); line-height: 1.65; max-width: 420px }
+        footer h6 { font-size: .74rem; font-weight: 700; color: var(--heading); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 12px }
+        .foot-links { list-style: none }
+        .foot-links li { margin-bottom: 7px }
+        .foot-links a { color: var(--muted); text-decoration: none; font-size: .86rem; transition: color .15s }
+        .foot-links a:hover { color: var(--p-text) }
+        .foot-bottom { border-top: 1px solid var(--card-border); padding-top: 20px; text-align: center; font-size: .78rem; color: var(--muted) }
+        .foot-bottom a { color: var(--p-text); text-decoration: none; font-weight: 500 }
 
         /* Scroll top */
         .scroll-top { position: fixed; bottom: 28px; right: 28px; width: 44px; height: 44px; background: var(--p); color: #fff; border: none; border-radius: 50%; cursor: pointer; font-size: 1rem; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(86,103,204,.35); z-index: 40; transition: transform .2s, background .2s }
@@ -122,28 +218,46 @@
 
 <!-- Nav -->
 <nav class="nav" id="nav"><div class="inner">
-    <a class="logo" href="/"><i class="fas fa-chart-line"></i>CarAuction Analytics</a>
+    <a class="logo" href="/"><i class="fas fa-car"></i>FindCars NZ</a>
     <div class="nav-links">
         <a href="#listings">Listings</a>
         <a href="#analytics">Analytics</a>
         <a href="#api">API</a>
-        <a href="#data">Data</a>
-        <a href="#about">About</a>
+        <a href="#story">Story</a>
+        <a href="#garage">Garage</a>
     </div>
-    <a class="gh" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ" target="_blank"><i class="fab fa-github"></i></a>
+    <div class="nav-right">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"><span class="knob">
+            <svg class="ico-sun" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            <svg class="ico-moon" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 116.707 2.707a7 7 0 0010.586 10.586z"/></svg>
+        </span></button>
+        <a class="gh" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ" target="_blank" aria-label="GitHub"><i class="fab fa-github"></i></a>
+    </div>
 </div></nav>
 
 <!-- Hero -->
-<section class="hero"><div class="mw">
-    <h1>New Zealand Vehicle Auction Analytics</h1>
-    <p>Daily-scraped damaged vehicle listings from Manheim NZ — interactive charts, searchable data, and a free REST API.</p>
-    <div class="kpi-row">
-        <div class="kpi"><div class="v" id="kpiTotal">—</div><div class="l">Total Listings</div></div>
+<header class="hero"><div class="mw hero-grid">
+    <div>
+        <h1>Every NZ salvage auction, tracked daily.</h1>
+        <p class="lede">FindCars NZ scrapes Manheim New Zealand's damaged-vehicle auctions every morning — three years of listings served as interactive charts, open CSVs, and a free JSON API.</p>
+        <div class="facts">
+            <span>1,131 days</span><span class="dot">·</span>
+            <span>660,000+ records</span><span class="dot">·</span>
+            <span>Updated daily by GitHub Actions</span>
+        </div>
+        <div class="cta">
+            <a class="btn-p" href="#listings"><i class="fas fa-list"></i>Browse today's listings</a>
+            <a class="btn-o" href="https://nz-car-auction.streamlit.app/" target="_blank"><i class="fas fa-wand-magic-sparkles"></i>Price predictor</a>
+        </div>
+    </div>
+    <div class="kpi-grid">
+        <div class="kpi"><div class="v" id="kpiTotal">—</div><div class="l">Listings</div></div>
         <div class="kpi"><div class="v" id="kpiUnique">—</div><div class="l">Unique Vehicles</div></div>
         <div class="kpi"><div class="v" id="kpiPrice">—</div><div class="l">Avg Price</div></div>
         <div class="kpi"><div class="v" id="kpiMfgs">—</div><div class="l">Manufacturers</div></div>
+        <div class="kpi-note">Last 30 days</div>
     </div>
-</div></section>
+</div></header>
 
 <!-- Today's Listings -->
 <section class="section" id="listings"><div class="mw">
@@ -157,7 +271,7 @@
         </div>
         <span style="color:var(--muted);font-size:.84rem" id="listingCount">&mdash;</span>
     </div>
-    <div class="card card-sm" style="padding:12px">
+    <div class="card2" style="padding:14px">
         <div class="table-responsive">
             <table id="listingTable" class="table table-hover"><thead></thead><tbody></tbody></table>
         </div>
@@ -169,7 +283,7 @@
 <section class="section alt" id="analytics"><div class="mw">
     <div class="section-label">Market Insights</div>
     <h2>Market Analytics</h2>
-    <p class="sub">Trends, distributions, and manufacturer breakdowns from over 460,000 auction records.</p>
+    <p class="sub">Trends, distributions, and manufacturer breakdowns from 660,000+ auction records.</p>
     <div class="chart-grid">
         <div class="chart-box"><h4>Top Manufacturers by Volume</h4><canvas id="cMfg"></canvas></div>
         <div class="chart-box"><h4>Fuel Type Distribution</h4><canvas id="cFuel"></canvas></div>
@@ -181,21 +295,22 @@
     </div>
 </div></section>
 
-<!-- REST API -->
+<!-- REST API + Open Data -->
 <section class="section" id="api"><div class="mw">
     <div class="section-label">Programmatic Access</div>
-    <h2>REST API</h2>
-    <p class="sub">Free, no authentication required. All data is pre-computed as static JSON — updated daily. Base URL: <code>https://findcars.prasanthsasikumar.com/api/v1</code></p>
-    <div class="card">
-        <div class="endpoint"><h5><span class="badge-get">GET</span> /stats/overview</h5><p>Aggregated statistics from the last 30 days.</p></div>
-        <div class="endpoint"><h5><span class="badge-get">GET</span> /stats/price-trends</h5><p>Historical price trends sampled every 7 days.</p></div>
-        <div class="endpoint"><h5><span class="badge-get">GET</span> /manufacturers</h5><p>Top 50 manufacturers by listing volume.</p></div>
-        <div class="endpoint"><h5><span class="badge-get">GET</span> /damage-analysis</h5><p>Damage keyword frequency counts.</p></div>
-        <div class="endpoint"><h5><span class="badge-get">GET</span> /price-distribution</h5><p>Vehicles grouped by price bracket.</p></div>
-        <div class="endpoint"><h5><span class="badge-get">GET</span> /search</h5><p>Full latest-day listings as JSON for client-side filtering.</p></div>
-    </div>
-    <div class="card" style="margin-top:16px">
-        <h5 style="font-size:.95rem;font-weight:600;color:var(--heading);margin-bottom:12px">Quick Start</h5>
+    <h2>REST API &amp; Open Data</h2>
+    <p class="sub">Free, no authentication. All data is pre-computed static JSON, refreshed daily. Base URL: <code>https://findcars.prasanthsasikumar.com/api/v1</code></p>
+    <div class="api-grid">
+        <div class="card2">
+            <div class="endpoint"><h5><span class="badge-get">GET</span> /stats/overview</h5><p>Aggregated statistics from the last 30 days.</p></div>
+            <div class="endpoint"><h5><span class="badge-get">GET</span> /stats/price-trends</h5><p>Historical price trends sampled every 7 days.</p></div>
+            <div class="endpoint"><h5><span class="badge-get">GET</span> /manufacturers</h5><p>Top 50 manufacturers by listing volume.</p></div>
+            <div class="endpoint"><h5><span class="badge-get">GET</span> /damage-analysis</h5><p>Damage keyword frequency counts.</p></div>
+            <div class="endpoint"><h5><span class="badge-get">GET</span> /price-distribution</h5><p>Vehicles grouped by price bracket.</p></div>
+            <div class="endpoint"><h5><span class="badge-get">GET</span> /search</h5><p>Full latest-day listings as JSON for client-side filtering.</p></div>
+        </div>
+        <div class="card2">
+            <h5 style="font-size:.95rem;font-weight:600;color:var(--heading);margin-bottom:4px">Quick Start</h5>
 <pre><code># Python
 import requests
 r = requests.get("https://findcars.prasanthsasikumar.com/api/v1/stats/overview")
@@ -204,40 +319,94 @@ print(f"Average price: ${r.json()['avg_price']}")</code></pre>
 fetch("https://findcars.prasanthsasikumar.com/api/v1/manufacturers")
   .then(r => r.json())
   .then(d => d.slice(0, 5).forEach(m => console.log(m.manufacturer, m.count)))</code></pre>
+        </div>
+    </div>
+    <div id="data" style="scroll-margin-top:68px">
+        <div class="link-grid">
+            <a class="link-card" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ/tree/main/data/raw" target="_blank"><i class="fas fa-file-csv"></i>Raw Daily CSVs<span class="note">1,131 files</span></a>
+            <a class="link-card" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ/tree/main/data/processed" target="_blank"><i class="fas fa-database"></i>Processed Dataset<span class="note">460K cleaned</span></a>
+            <a class="link-card" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ/tree/main/data/api" target="_blank"><i class="fas fa-code"></i>API JSON Snapshots</a>
+            <a class="link-card" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ" target="_blank"><i class="fab fa-github"></i>Full Repository<span class="note">MIT</span></a>
+        </div>
     </div>
 </div></section>
 
-<!-- Data Downloads -->
-<section class="section alt" id="data"><div class="mw">
-    <div class="section-label">Open Data</div>
-    <h2>Data Downloads</h2>
-    <p class="sub">All datasets are publicly available on GitHub under the MIT license.</p>
-    <div class="link-grid">
-        <a class="link-card" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ/tree/main/data/raw" target="_blank"><i class="fas fa-file-csv"></i>Raw Daily CSVs<span class="sub">1,100+ files</span></a>
-        <a class="link-card" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ/tree/main/data/processed" target="_blank"><i class="fas fa-database"></i>Processed Dataset<span class="sub">460K records</span></a>
-        <a class="link-card" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ/tree/main/data/api" target="_blank"><i class="fas fa-code"></i>API JSON Snapshots</a>
-        <a class="link-card" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ" target="_blank"><i class="fab fa-github"></i>Full Repository</a>
+<!-- The Story -->
+<section class="section alt" id="story"><div class="mw">
+    <div class="section-label">Behind the Project</div>
+    <h2>The Story</h2>
+    <p class="sub">This dashboard started as a PhD-budget side hustle — buying damaged cars at insurance auctions, fixing them, and selling them on. The full write-up is a three-part series on <a href="https://prasanthsasikumar.com/series/NZCarAuctions" target="_blank">prasanthsasikumar.com</a>.</p>
+    <div class="story-grid">
+        <a class="story-card" href="https://prasanthsasikumar.com/posts/nz-car-auction-data-pipeline" target="_blank">
+            <div class="part">Part 1 · The Data</div>
+            <h3>Scraping three years of NZ auction listings</h3>
+            <p>How a daily crawler and GitHub Actions quietly built a 660,000-record public dataset.</p>
+            <div class="go">Read the post →</div>
+        </a>
+        <a class="story-card" href="https://prasanthsasikumar.com/posts/nz-car-auction-analytics" target="_blank">
+            <div class="part">Part 2 · The Analytics</div>
+            <h3>What 1,100 days of salvage auctions reveal</h3>
+            <p>Price trends, damage patterns, and how this site serves an API with zero servers.</p>
+            <div class="go">Read the post →</div>
+        </a>
+        <a class="story-card" href="https://prasanthsasikumar.com/posts/nz-car-auction-price-prediction" target="_blank">
+            <div class="part">Part 3 · The Model</div>
+            <h3>Predicting auction prices with XGBoost</h3>
+            <p>Turning the logged history into a practical "is this a good buy?" estimator.</p>
+            <div class="go">Read the post →</div>
+        </a>
+        <a class="story-card tool" href="https://nz-car-auction.streamlit.app/" target="_blank">
+            <div class="part">Live Tool</div>
+            <h3>Try the price predictor</h3>
+            <p>A Streamlit app wrapping the XGBoost model — paste a listing's details, get a sensible price estimate.</p>
+            <div class="go">Open the app ↗</div>
+        </a>
     </div>
 </div></section>
 
-<!-- About -->
-<section class="section" id="about"><div class="mw">
-    <div class="section-label">About</div>
-    <h2>About This Project</h2>
-    <div class="card">
-        <p style="color:var(--body);max-width:680px;font-size:1.02rem;line-height:1.7">
-            This project tracks <strong>Manheim New Zealand</strong> damaged vehicle auctions with automated daily scraping via GitHub Actions.
-            Over <strong>991 days</strong> and <strong>460,000+ records</strong>, it provides price trends, manufacturer analytics, and a free REST API.
-            Built with Python, Pandas, and Chart.js — hosted on Netlify as a fully static site.
-            <a href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ" style="color:var(--p);font-weight:500">Open source on GitHub</a>.
-        </p>
+<!-- Garage -->
+<section class="section" id="garage"><div class="mw">
+    <div class="section-label">From Auction to Driveway</div>
+    <h2>The Garage</h2>
+    <p class="sub">Some of the cars found through these very auction feeds — the garage is basically the receipts. <a href="https://prasanthsasikumar.com/garage" target="_blank">See the full collection →</a></p>
+    <div class="garage-grid">
+        <a class="gcar" href="https://prasanthsasikumar.com/garage" target="_blank"><img loading="lazy" src="https://garrage.prasanthsasikumar.com/Mazda_MX5/281557907_7442648105776409_399048560628484607_n.jpg" alt="Mazda MX-5"><div class="cap"><div class="n">Mazda MX-5</div><div class="y">2000</div></div></a>
+        <a class="gcar" href="https://prasanthsasikumar.com/garage" target="_blank"><img loading="lazy" src="https://garrage.prasanthsasikumar.com/Honda_Integra_1997/IMG_20170627_135502.jpg" alt="Honda Integra"><div class="cap"><div class="n">Honda Integra</div><div class="y">1997</div></div></a>
+        <a class="gcar" href="https://prasanthsasikumar.com/garage" target="_blank"><img loading="lazy" src="https://garrage.prasanthsasikumar.com/Benz_Sprinter_2017/Campervan_PHOTO-2025-12-15-21-53-33%202.jpg" alt="Mercedes-Benz Sprinter campervan"><div class="cap"><div class="n">Benz Sprinter Camper</div><div class="y">2017</div></div></a>
+        <a class="gcar" href="https://prasanthsasikumar.com/garage" target="_blank"><img loading="lazy" src="https://garrage.prasanthsasikumar.com/Subaru_Legacy_2001/Subaru_Legacy_Main_PHOTO-2025-12-15-21-52-44.jpg" alt="Subaru Legacy"><div class="cap"><div class="n">Subaru Legacy</div><div class="y">2001</div></div></a>
+        <a class="gcar" href="https://prasanthsasikumar.com/garage" target="_blank"><img loading="lazy" src="https://garrage.prasanthsasikumar.com/Mazda_RX8_Purple/Mazda_RX8_Purple_2_RightSide.jpg" alt="Mazda RX-8"><div class="cap"><div class="n">Mazda RX-8</div><div class="y">&nbsp;</div></div></a>
+        <a class="gcar" href="https://prasanthsasikumar.com/garage" target="_blank"><img loading="lazy" src="https://garrage.prasanthsasikumar.com/Nissan_Primera_2000_Wagon/1cover.jpg" alt="Nissan Primera wagon"><div class="cap"><div class="n">Nissan Primera Wagon</div><div class="y">2000</div></div></a>
     </div>
 </div></section>
 
-<!-- Footer -->
-<footer>
-    <div class="mw"><a href="https://prasanthsasikumar.com">prasanthsasikumar.com</a> &middot; &copy; 2026</div>
-</footer>
+<!-- Footer / About -->
+<footer id="about"><div class="mw">
+    <div class="foot-grid">
+        <div>
+            <div class="foot-brand"><i class="fas fa-car"></i>FindCars NZ</div>
+            <p>Tracks <strong>Manheim New Zealand</strong> damaged-vehicle auctions with automated daily scraping. Built with Python, Pandas, and Chart.js — hosted on Netlify as a fully static site. Data is for research purposes; verify prices with Manheim NZ directly.</p>
+        </div>
+        <div>
+            <h6>Explore</h6>
+            <ul class="foot-links">
+                <li><a href="#listings">Today's listings</a></li>
+                <li><a href="#analytics">Market analytics</a></li>
+                <li><a href="#api">REST API</a></li>
+                <li><a href="#data">Data downloads</a></li>
+            </ul>
+        </div>
+        <div>
+            <h6>Elsewhere</h6>
+            <ul class="foot-links">
+                <li><a href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ" target="_blank">GitHub repository</a></li>
+                <li><a href="https://prasanthsasikumar.com/series/NZCarAuctions" target="_blank">The blog series</a></li>
+                <li><a href="https://nz-car-auction.streamlit.app/" target="_blank">Price predictor app</a></li>
+                <li><a href="https://prasanthsasikumar.com/garage" target="_blank">The garage</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="foot-bottom"><a href="https://prasanthsasikumar.com">prasanthsasikumar.com</a> &middot; MIT License &middot; &copy; 2026</div>
+</div></footer>
 
 <button class="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top"><i class="fas fa-arrow-up"></i></button>
 
@@ -247,93 +416,179 @@ fetch("https://findcars.prasanthsasikumar.com/api/v1/manufacturers")
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script>
 let charts = {}, dt;
+const cache = {};
 
-// Nav scroll effect
+// ── Theme ──
+// Chart palettes validated per mode (dataviz six-checks: lightness band, chroma,
+// CVD separation, contrast vs surface). Dark is selected for #0a0a0a, not a flip.
+const PAL = {
+    light: { cat: ['#5667cc','#1baf7a','#eda100','#e34948','#e87ba4'], primary: '#5667cc', secondary: '#eda100', grid: 'rgba(22,24,27,.07)', tick: '#6b7280', surface: '#ffffff' },
+    dark:  { cat: ['#6b7ce8','#199e70','#c98500','#e66767','#d55181'], primary: '#6b7ce8', secondary: '#c98500', grid: 'rgba(255,255,255,.08)', tick: '#9ca3af', surface: '#0a0a0a' }
+};
+const isDark = () => document.documentElement.classList.contains('dark');
+const pal = () => isDark() ? PAL.dark : PAL.light;
+const hexA = (hex, a) => hex + Math.round(a * 255).toString(16).padStart(2, '0');
+
+document.getElementById('themeToggle').addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+    try { localStorage.setItem('theme', isDark() ? 'dark' : 'light') } catch (e) {}
+    renderAllCharts();
+});
+
+// ── Nav scroll effect ──
 const nav = document.getElementById('nav');
-window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 12) });
-
-// Scroll top
 const st = document.querySelector('.scroll-top');
-window.addEventListener('scroll', () => { st.style.display = window.scrollY > 700 ? 'flex' : 'none' });
+window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 20);
+    st.style.display = window.scrollY > 700 ? 'flex' : 'none';
+});
 
-// Registered filter
-$.fn.dataTable.ext.search.push(function(s,d,i) {
+// ── Registered filter ──
+$.fn.dataTable.ext.search.push(function (s, d, i) {
     return !$('#showRegistered').is(':checked') || d.some(v => v && v.toLowerCase().trim() === 'yes');
 });
 $('#showRegistered').on('change', () => { if (dt) dt.draw() });
 
-// Today's Listings
+// ── Today's Listings ──
 async function loadListings() {
     try {
         const r = await fetch('/data/api/latest_listings.json');
-        const d = await r.json();
-        const { stats, columns, listings } = d;
+        const { stats, columns, listings } = await r.json();
         document.getElementById('listingFileDate').textContent = 'Data as of ' + stats.file_date;
         document.getElementById('listingCount').textContent = stats.total.toLocaleString() + ' vehicles';
-        let h = '<tr>'; columns.forEach(c => h += '<th>'+c+'</th>'); h += '</tr>';
+        let h = '<tr>'; columns.forEach(c => { if (c !== 'Link') h += '<th>' + c + '</th>' }); h += '</tr>';
         document.querySelector('#listingTable thead').innerHTML = h;
-        let b = ''; listings.forEach(row => { b += '<tr>'; columns.forEach(c => { let v = row[c] || ''; if (c === 'Link') return; if (['Manufacturer','Model','Damage description'].includes(c) && row['Link']) { v = '<a href="'+row['Link']+'" target="_blank" style="color:var(--p);font-weight:500;text-decoration:none" title="View on Manheim">'+v+'</a>' } b += '<td>'+v+'</td>' }); b += '</tr>' });
+        let b = '';
+        listings.forEach(row => {
+            b += '<tr>';
+            columns.forEach(c => {
+                if (c === 'Link') return;
+                let v = row[c] || '';
+                if (['Manufacturer','Model','Damage description'].includes(c) && row['Link']) {
+                    v = '<a href="' + row['Link'] + '" target="_blank" title="View on Manheim">' + v + '</a>';
+                }
+                b += '<td>' + v + '</td>';
+            });
+            b += '</tr>';
+        });
         document.querySelector('#listingTable tbody').innerHTML = b;
         dt = $('#listingTable').DataTable({ pageLength: 50, order: [[0,'asc']], responsive: true, lengthMenu: [[25,50,100,-1],[25,50,100,'All']], language: { info: '_START_–_END_ of _TOTAL_', infoEmpty: '0 listings', zeroRecords: 'No matching listings' } });
         document.getElementById('listingLoading').style.display = 'none';
         if ($('#showRegistered').is(':checked')) dt.draw();
-    } catch(e) { document.getElementById('listingLoading').innerHTML = '<span style="color:#dc3545">Failed to load.</span>'; console.error(e) }
+    } catch (e) { document.getElementById('listingLoading').innerHTML = '<span style="color:#e34948">Failed to load.</span>'; console.error(e) }
 }
 
-// Charts
-async function loadOverview() {
-    try {
-        const r = await fetch('/api/v1/stats/overview');
-        const d = await r.json(); if (d.error) return;
-        document.getElementById('kpiTotal').textContent = d.total_listings?.toLocaleString()||'—';
-        document.getElementById('kpiUnique').textContent = d.unique_vehicles?.toLocaleString()||'—';
-        document.getElementById('kpiPrice').textContent = '$'+(d.avg_price?.toLocaleString()||'—');
-        document.getElementById('kpiMfgs').textContent = d.manufacturers||'—';
-        const m = d.top_manufacturers || {};
-        if (Object.keys(m).length) { charts.mfg && charts.mfg.destroy(); charts.mfg = new Chart(document.getElementById('cMfg'), { type:'bar', data:{ labels:Object.keys(m).slice(0,10), datasets:[{ label:'Listings', data:Object.values(m).slice(0,10), backgroundColor:'rgba(86,103,204,.7)', borderColor:'rgba(86,103,204,1)', borderWidth:1, borderRadius:4 }] }, options:{ responsive:true, plugins:{legend:{display:false}} } }) }
-        const f = d.fuel_types || {};
-        if (Object.keys(f).length) { charts.fuel && charts.fuel.destroy(); charts.fuel = new Chart(document.getElementById('cFuel'), { type:'doughnut', data:{ labels:Object.keys(f), datasets:[{ data:Object.values(f), backgroundColor:['rgba(86,103,204,.8)','rgba(168,85,247,.7)','rgba(244,114,182,.65)','rgba(34,211,238,.65)','rgba(250,204,21,.65)'], borderWidth:0 }] }, options:{ responsive:true } }) }
-    } catch(e) { console.error(e) }
+// ── Charts: fetch once, render theme-aware from cache ──
+function axes() {
+    const p = pal();
+    return {
+        x: { grid: { color: p.grid }, ticks: { color: p.tick }, border: { color: p.grid } },
+        y: { grid: { color: p.grid }, ticks: { color: p.tick }, border: { color: p.grid } }
+    };
 }
-async function loadTrends() {
-    try {
-        const r = await fetch('/api/v1/stats/price-trends');
-        const d = await r.json(); if (d.error||!Array.isArray(d)) return;
-        const dates = d.map(x=>x.date);
-        charts.trends && charts.trends.destroy(); charts.trends = new Chart(document.getElementById('cTrends'), { type:'line', data:{ labels:dates, datasets:[ { label:'Avg Price', data:d.map(x=>x.avg_price), borderColor:'#5667cc', backgroundColor:'rgba(86,103,204,.04)', tension:.3, fill:true, pointRadius:0, borderWidth:2 }, { label:'Median', data:d.map(x=>x.median_price), borderColor:'#a855f7', backgroundColor:'transparent', tension:.3, pointRadius:0, borderWidth:2 } ] }, options:{ responsive:true, interaction:{intersect:false,mode:'index'} } });
-        charts.counts && charts.counts.destroy(); charts.counts = new Chart(document.getElementById('cCounts'), { type:'line', data:{ labels:dates, datasets:[{ label:'Listings', data:d.map(x=>x.count), borderColor:'#22d3ee', backgroundColor:'rgba(34,211,238,.08)', fill:true, tension:.3, pointRadius:0, borderWidth:2 }] }, options:{ responsive:true } });
-    } catch(e) { console.error(e) }
+function legendOpts() { return { labels: { color: pal().tick, usePointStyle: true, boxWidth: 8 } } }
+
+function renderOverview() {
+    const d = cache.overview; if (!d) return;
+    const p = pal();
+    document.getElementById('kpiTotal').textContent = d.total_listings?.toLocaleString() || '—';
+    document.getElementById('kpiUnique').textContent = d.unique_vehicles?.toLocaleString() || '—';
+    document.getElementById('kpiPrice').textContent = '$' + (d.avg_price?.toLocaleString() || '—');
+    document.getElementById('kpiMfgs').textContent = d.manufacturers || '—';
+    const m = d.top_manufacturers || {};
+    if (Object.keys(m).length) {
+        charts.mfg && charts.mfg.destroy();
+        charts.mfg = new Chart(document.getElementById('cMfg'), {
+            type: 'bar',
+            data: { labels: Object.keys(m).slice(0,10), datasets: [{ label: 'Listings', data: Object.values(m).slice(0,10), backgroundColor: hexA(p.primary,.75), borderColor: p.primary, borderWidth: 1, borderRadius: 4 }] },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: axes() }
+        });
+    }
+    const f = d.fuel_types || {};
+    if (Object.keys(f).length) {
+        // Never cycle hues: top 5 fuel types keep the palette, the rest fold into a gray "Other"
+        const entries = Object.entries(f).sort((a, b) => b[1] - a[1]);
+        const top = entries.slice(0, 5);
+        const rest = entries.slice(5).reduce((s, [, v]) => s + v, 0);
+        if (rest > 0) top.push(['Other', rest]);
+        const colors = top.map((_, i) => i < 5 ? p.cat[i] : p.tick);
+        charts.fuel && charts.fuel.destroy();
+        charts.fuel = new Chart(document.getElementById('cFuel'), {
+            type: 'doughnut',
+            data: { labels: top.map(x => x[0]), datasets: [{ data: top.map(x => x[1]), backgroundColor: colors, borderColor: p.surface, borderWidth: 2 }] },
+            options: { responsive: true, plugins: { legend: { position: 'right', ...legendOpts() } } }
+        });
+    }
 }
-async function loadMfg() {
-    try {
-        const r = await fetch('/api/v1/manufacturers');
-        const d = await r.json(); if (d.error||!Array.isArray(d)) return;
-        const t = d.slice(0,20);
-        charts.mfgPrice && charts.mfgPrice.destroy(); charts.mfgPrice = new Chart(document.getElementById('cMfgPrice'), { type:'bar', data:{ labels:t.map(x=>x.manufacturer), datasets:[{ label:'Avg Price ($)', data:t.map(x=>x.avg_price), backgroundColor:'rgba(168,85,247,.7)', borderColor:'rgba(168,85,247,1)', borderWidth:1, borderRadius:4 }] }, options:{ responsive:true, indexAxis:'y', plugins:{legend:{display:false}} } });
-    } catch(e) { console.error(e) }
+function renderTrends() {
+    const d = cache.trends; if (!d) return;
+    const p = pal();
+    const dates = d.map(x => x.date);
+    charts.trends && charts.trends.destroy();
+    charts.trends = new Chart(document.getElementById('cTrends'), {
+        type: 'line',
+        data: { labels: dates, datasets: [
+            { label: 'Avg Price', data: d.map(x => x.avg_price), borderColor: p.primary, backgroundColor: hexA(p.primary, .05), tension: .3, fill: true, pointRadius: 0, borderWidth: 2 },
+            { label: 'Median', data: d.map(x => x.median_price), borderColor: p.secondary, backgroundColor: 'transparent', tension: .3, pointRadius: 0, borderWidth: 2 }
+        ] },
+        options: { responsive: true, interaction: { intersect: false, mode: 'index' }, plugins: { legend: legendOpts() }, scales: axes() }
+    });
+    charts.counts && charts.counts.destroy();
+    charts.counts = new Chart(document.getElementById('cCounts'), {
+        type: 'line',
+        data: { labels: dates, datasets: [{ label: 'Listings', data: d.map(x => x.count), borderColor: p.primary, backgroundColor: hexA(p.primary, .08), fill: true, tension: .3, pointRadius: 0, borderWidth: 2 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: axes() }
+    });
 }
-async function loadDamage() {
-    try {
-        const r = await fetch('/api/v1/damage-analysis');
-        const d = await r.json(); if (d.error) return;
-        charts.damage && charts.damage.destroy(); charts.damage = new Chart(document.getElementById('cDamage'), { type:'bar', data:{ labels:Object.keys(d), datasets:[{ label:'Count', data:Object.values(d), backgroundColor:'rgba(244,114,182,.7)', borderColor:'rgba(244,114,182,1)', borderWidth:1, borderRadius:4 }] }, options:{ responsive:true, indexAxis:'y' } });
-    } catch(e) { console.error(e) }
+function renderMfgPrice() {
+    const d = cache.manufacturers; if (!d) return;
+    const p = pal();
+    const t = d.slice(0, 20);
+    charts.mfgPrice && charts.mfgPrice.destroy();
+    charts.mfgPrice = new Chart(document.getElementById('cMfgPrice'), {
+        type: 'bar',
+        data: { labels: t.map(x => x.manufacturer), datasets: [{ label: 'Avg Price ($)', data: t.map(x => x.avg_price), backgroundColor: hexA(p.primary,.75), borderColor: p.primary, borderWidth: 1, borderRadius: 4 }] },
+        options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } }, scales: axes() }
+    });
 }
-async function loadDist() {
+function renderDamage() {
+    const d = cache.damage; if (!d) return;
+    const p = pal();
+    charts.damage && charts.damage.destroy();
+    charts.damage = new Chart(document.getElementById('cDamage'), {
+        type: 'bar',
+        data: { labels: Object.keys(d), datasets: [{ label: 'Count', data: Object.values(d), backgroundColor: hexA(p.primary,.75), borderColor: p.primary, borderWidth: 1, borderRadius: 4 }] },
+        options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } }, scales: axes() }
+    });
+}
+function renderDist() {
+    const d = cache.dist; if (!d) return;
+    const p = pal();
+    charts.dist && charts.dist.destroy();
+    charts.dist = new Chart(document.getElementById('cDist'), {
+        type: 'bar',
+        data: { labels: Object.keys(d), datasets: [{ label: 'Vehicles', data: Object.values(d), backgroundColor: hexA(p.primary,.75), borderColor: p.primary, borderWidth: 1, borderRadius: 4 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: axes() }
+    });
+}
+function renderAllCharts() { renderOverview(); renderTrends(); renderMfgPrice(); renderDamage(); renderDist() }
+
+async function grab(url, key, render) {
     try {
-        const r = await fetch('/api/v1/price-distribution');
-        const d = await r.json(); if (d.error) return;
-        charts.dist && charts.dist.destroy(); charts.dist = new Chart(document.getElementById('cDist'), { type:'bar', data:{ labels:Object.keys(d), datasets:[{ label:'Vehicles', data:Object.values(d), backgroundColor:'rgba(34,211,238,.7)', borderColor:'rgba(34,211,238,1)', borderWidth:1, borderRadius:4 }] }, options:{ responsive:true } });
-    } catch(e) { console.error(e) }
+        const r = await fetch(url);
+        const d = await r.json();
+        if (d.error) return;
+        cache[key] = d; render();
+    } catch (e) { console.error(url, e) }
 }
 
 window.addEventListener('load', () => {
     loadListings();
-    loadOverview();
-    loadTrends();
-    loadMfg();
-    loadDamage();
-    loadDist();
+    grab('/api/v1/stats/overview', 'overview', renderOverview);
+    grab('/api/v1/stats/price-trends', 'trends', renderTrends);
+    grab('/api/v1/manufacturers', 'manufacturers', renderMfgPrice);
+    grab('/api/v1/damage-analysis', 'damage', renderDamage);
+    grab('/api/v1/price-distribution', 'dist', renderDist);
 });
 </script>
 </body>

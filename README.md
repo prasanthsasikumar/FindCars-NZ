@@ -1,13 +1,13 @@
-<<<<<<< HEAD
-# 🚗 CarAuction Analytics NZ
+# 🚗 FindCars NZ
 
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
-[![Flask](https://img.shields.io/badge/flask-3.0+-green.svg)](https://flask.palletsprojects.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A comprehensive data platform tracking vehicle auction listings from Manheim New Zealand. This project provides historical trends, price analytics, and insights into the used vehicle market with 991 days of data covering **460K+ auction records**.
+**FindCars NZ** (this repo: CarAuction-Analytics-NZ) is a data platform tracking damaged-vehicle auction listings from Manheim New Zealand. Three years of daily scraping — **1,131 days and 660,000+ raw records** — served as an interactive dashboard, open datasets, and a free static JSON API.
 
-🔗 **Live Demo:** [findcars.prasanthsasikumar.com](https://findcars.prasanthsasikumar.com)
+🔗 **Live site:** [findcars.prasanthsasikumar.com](https://findcars.prasanthsasikumar.com)
+📖 **The story:** a three-part blog series — [the data](https://prasanthsasikumar.com/posts/nz-car-auction-data-pipeline) · [the analytics](https://prasanthsasikumar.com/posts/nz-car-auction-analytics) · [the prediction model](https://prasanthsasikumar.com/posts/nz-car-auction-price-prediction)
+🔮 **Price predictor:** [nz-car-auction.streamlit.app](https://nz-car-auction.streamlit.app/)
 
 ## ✨ Features
 
@@ -22,10 +22,10 @@ A comprehensive data platform tracking vehicle auction listings from Manheim New
 
 | Metric | Value |
 |--------|-------|
-| **Time Period** | May 27, 2023 - February 18, 2026 |
-| **Total Days** | 991 days |
-| **Missing Days** | 8 (99.2% coverage) |
-| **Total Records** | 460,000+ (cleaned) |
+| **Time Period** | May 27, 2023 - present (updated daily) |
+| **Total Days** | 1,131+ days |
+| **Missing Days** | 8 (99%+ coverage) |
+| **Total Records** | 660,000+ raw / 460,000+ cleaned |
 | **Manufacturers** | 500+ |
 | **Data Fields** | 20+ attributes per vehicle |
 
@@ -46,7 +46,7 @@ A comprehensive data platform tracking vehicle auction listings from Manheim New
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/CarAuction-Analytics-NZ.git
+git clone https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ.git
 cd CarAuction-Analytics-NZ
 ```
 
@@ -90,7 +90,7 @@ CarAuction-Analytics-NZ/
 ├── requirements.txt            # Python dependencies
 ├── gunicorn_config.py          # Production server config
 ├── data/
-│   ├── raw/                    # 991 daily CSV files
+│   ├── raw/                    # Daily CSV files (1,131+)
 │   ├── processed/              # Cleaned datasets
 │   │   ├── car_auction_public.csv
 │   │   ├── car_auction_public.parquet
@@ -170,7 +170,7 @@ For complete API documentation, visit: [/api-docs](https://findcars.prasanthsasi
 
 The project includes a comprehensive data cleaning pipeline that:
 
-1. Loads all 991 daily CSV files
+1. Loads all 1,131+ daily CSV files
 2. Removes duplicates based on vehicle attributes
 3. Cleans price and mileage data
 4. Standardizes manufacturer and model names
@@ -282,7 +282,7 @@ This data is for informational and research purposes only. Prices and availabili
 
 ## 🔮 Future Plans
 
-- [ ] Implement XGBoost price prediction model
+- [x] Implement XGBoost price prediction model — live at [nz-car-auction.streamlit.app](https://nz-car-auction.streamlit.app/)
 - [ ] Add email price alerts for tracked vehicles
 - [ ] Expand to other auction platforms
 - [ ] Build recommendation engine
@@ -293,7 +293,7 @@ This data is for informational and research purposes only. Prices and availabili
 
 Prasanth Sasikumar - [prasanthsasikumar.com](https://prasanthsasikumar.com)
 
-Project Link: [https://github.com/yourusername/CarAuction-Analytics-NZ](https://github.com/yourusername/CarAuction-Analytics-NZ)
+Project Link: [https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ](https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ)
 
 ---
 
