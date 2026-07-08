@@ -35,12 +35,17 @@ jobs:
           python main.py
         continue-on-error: false
       
+      - name: Generate API JSON files
+        run: |
+          mkdir -p data/api
+          python generate_api_data.py
+      
       - name: Check if new data was scraped
         id: check_changes
         run: |
-          if [[ -n $(git status --porcelain data/raw/) ]]; then
+          if [[ -n $(git status --porcelain data/raw/ data/api/) ]]; then
             echo "changes=true" >> $GITHUB_OUTPUT
-            echo "✅ New data file created"
+            echo "✅ New data available"
           else
             echo "changes=false" >> $GITHUB_OUTPUT
             echo "⚠️ No new data to commit"
@@ -51,7 +56,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/raw/
+          git add data/raw/ data/api/
           git commit -m "🤖 Daily scrape: $(date +'%Y-%m-%d %H:%M UTC')"
           git push origin HEAD:${GITHUB_REF##*/}
       
