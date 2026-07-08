@@ -6,18 +6,18 @@
 
 [[redirects]]
   from = "/analytics"
-  to = "/analytics.html"
-  status = 200
+  to = "/"
+  status = 301
 
 [[redirects]]
   from = "/api-docs"
-  to = "/analytics"
+  to = "/"
   status = 301
 
 [[redirects]]
   from = "/about"
-  to = "/about.html"
-  status = 200
+  to = "/"
+  status = 301
 
 [[redirects]]
   from = "/api/v1/stats/overview"
