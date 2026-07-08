@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - CarAuction Analytics NZ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+
+        .navbar {
+            background: white !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: #667eea !important;
+        }
+
+        .api-section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .endpoint {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .method {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .method-get {
+            background: #28a745;
+            color: white;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-car-crash"></i> CarAuction Analytics NZ
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Today's Listings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/analytics">Analytics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/api-docs">API</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="downloadDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-download"></i> Data
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="downloadDropdown">
+                            <li><a class="dropdown-item" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ/tree/main/data/raw" target="_blank"><i class="fab fa-github"></i> Raw Data (GitHub)</a></li>
+                            <li><a class="dropdown-item" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ/tree/main/data/processed" target="_blank"><i class="fab fa-github"></i> Processed Data (GitHub)</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">About</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <h1 class="mb-4"><i class="fas fa-code"></i> API Documentation</h1>
+        <p class="lead">RESTful API for programmatic access to vehicle auction data</p>
+
+        <div class="api-section">
+            <h3>Base URL</h3>
+            <div class="code-block">
+                <code>https://YOUR-NETLIFY-SITE.netlify.app/api/v1</code>
+            </div>
+            <p class="mt-2 text-muted">Update with your actual Netlify domain after deployment.</p>
+        </div>
+
+        <div class="api-section">
+            <h3>Authentication</h3>
+            <p>Currently, the API is <strong>open and does not require authentication</strong>. Please use responsibly.</p>
+        </div>
+
+        <div class="api-section">
+            <h3>How It Works</h3>
+            <p>This is a static-hosted API. All data is pre-computed as JSON files and served directly — no server-side processing needed. Data is refreshed when the site is redeployed (triggered by new commits from the daily GitHub Actions scraper).</p>
+        </div>
+
+        <div class="api-section">
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <h5><span class="method method-get">GET</span> /api/v1/stats/overview</h5>
+                <p>Get overview statistics from the most recent 30 days of data</p>
+                <h6>Response Example:</h6>
+                <div class="code-block">
+<pre><code>{
+  "total_listings": 45000,
+  "unique_vehicles": 12000,
+  "manufacturers": 500,
+  "avg_price": 2500.50,
+  "median_price": 1800.00,
+  "top_manufacturers": {
+    "Toyota": 8500,
+    "Mazda": 6200
+  }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h5><span class="method method-get">GET</span> /api/v1/stats/price-trends</h5>
+                <p>Get historical price trends (sampled every 7 days)</p>
+                <h6>Response Example:</h6>
+                <div class="code-block">
+<pre><code>[
+  {
+    "date": "2023-05-27",
+    "avg_price": 2450.30,
+    "median_price": 1750.00,
+    "count": 550
+  }
+]</code></pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h5><span class="method method-get">GET</span> /api/v1/manufacturers</h5>
+                <p>Get statistics by manufacturer from recent 30 days</p>
+                <h6>Response Example:</h6>
+                <div class="code-block">
+<pre><code>[
+  {
+    "manufacturer": "Toyota",
+    "avg_price": 3200.50,
+    "median_price": 2800.00,
+    "count": 8500,
+    "unique_models": 45
+  }
+]</code></pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h5><span class="method method-get">GET</span> /api/v1/damage-analysis</h5>
+                <p>Get frequency analysis of damage types</p>
+                <h6>Response Example:</h6>
+                <div class="code-block">
+<pre><code>{
+  "Front Damage": 12500,
+  "Rear Damage": 10200,
+  "Airbags Deployed": 3800
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h5><span class="method method-get">GET</span> /api/v1/search</h5>
+                <p>Get latest day's listings for client-side search/filter</p>
+                <p class="text-muted">Returns the full latest day's data as JSON. Filter/sort on the client side.</p>
+                <h6>Response Example:</h6>
+                <div class="code-block">
+<pre><code>{
+  "stats": { ... },
+  "columns": [...],
+  "listings": [...],
+  "count": 447
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <h5><span class="method method-get">GET</span> /api/v1/download/latest</h5>
+                <p>Redirects to raw data files on GitHub</p>
+            </div>
+
+            <div class="endpoint">
+                <h5><span class="method method-get">GET</span> /api/v1/download/processed</h5>
+                <p>Redirects to processed data files on GitHub</p>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h3>Code Examples</h3>
+
+            <h5>Python</h5>
+            <div class="code-block">
+<pre><code>import requests
+
+BASE = "https://YOUR-NETLIFY-SITE.netlify.app/api/v1"
+
+response = requests.get(f"{BASE}/stats/overview")
+data = response.json()
+print(f"Average price: ${data['avg_price']}")
+</code></pre>
+            </div>
+
+            <h5>JavaScript</h5>
+            <div class="code-block">
+<pre><code>const BASE = "https://YOUR-NETLIFY-SITE.netlify.app/api/v1";
+
+fetch(`${BASE}/stats/overview`)
+  .then(response => response.json())
+  .then(data => {
+    console.log(`Average price: $${data.avg_price}`);
+  });
+</code></pre>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h3>Rate Limits</h3>
+            <p>Since this is a static site with pre-computed JSON files, there are effectively no rate limits. Please use responsibly.</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+</body>
+</html>

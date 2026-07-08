@@ -1,0 +1,76 @@
+[build]
+  publish = "."
+
+[build.processing]
+  skip_processing = true
+
+[[redirects]]
+  from = "/home"
+  to = "/home.html"
+  status = 200
+
+[[redirects]]
+  from = "/analytics"
+  to = "/analytics.html"
+  status = 200
+
+[[redirects]]
+  from = "/api-docs"
+  to = "/api-docs.html"
+  status = 200
+
+[[redirects]]
+  from = "/about"
+  to = "/about.html"
+  status = 200
+
+[[redirects]]
+  from = "/api/v1/stats/overview"
+  to = "/data/api/overview.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/v1/stats/price-trends"
+  to = "/data/api/price_trends.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/v1/manufacturers"
+  to = "/data/api/manufacturers.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/v1/damage-analysis"
+  to = "/data/api/damage_analysis.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/v1/price-distribution"
+  to = "/data/api/price_distribution.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/v1/search"
+  to = "/data/api/latest_listings.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/v1/download/latest"
+  to = "https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ/tree/main/data/raw"
+  status = 302
+
+[[redirects]]
+  from = "/api/v1/download/processed"
+  to = "https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ/tree/main/data/processed"
+  status = 302
+
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
+[[headers]]
+  for = "/data/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Cache-Control = "public, max-age=3600"

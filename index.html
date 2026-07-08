@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Today's Listings - CarAuction Analytics NZ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: white !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color) !important;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 5px;
+            padding: 8px 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.75rem;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .table {
+            font-size: 0.85rem;
+            margin-bottom: 0;
+        }
+
+        .table thead {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .table thead th {
+            padding: 8px 5px;
+            font-size: 0.8rem;
+        }
+
+        .table tbody td {
+            padding: 6px 5px;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+
+        .dataTables_wrapper {
+            font-size: 0.85rem;
+        }
+
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_paginate {
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-car-crash"></i> CarAuction Analytics NZ
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Today's Listings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/analytics">Analytics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/api-docs">API</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="downloadDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-download"></i> Data
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="downloadDropdown">
+                            <li><a class="dropdown-item" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ/tree/main/data/raw" target="_blank"><i class="fab fa-github"></i> Raw Data (GitHub)</a></li>
+                            <li><a class="dropdown-item" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ/tree/main/data/processed" target="_blank"><i class="fab fa-github"></i> Processed Data (GitHub)</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">About</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-3 my-3">
+        <h1 class="mb-2" style="font-size: 1.5rem;"><i class="fas fa-calendar-day"></i> Today's Vehicle Listings</h1>
+        <p class="mb-2" style="font-size: 0.9rem;" id="fileDate">Loading...</p>
+
+        <div class="mb-2">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="showRegisteredOnly" checked>
+                <label class="form-check-label" for="showRegisteredOnly" style="font-size: 0.9rem;">
+                    Show only registered vehicles
+                </label>
+            </div>
+        </div>
+
+        <div class="row mb-2" id="statsRow">
+            <div class="col-md-3">
+                <div class="stats-card text-center">
+                    <div class="stat-value" id="statTotal">-</div>
+                    <div class="stat-label">Total Listings</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card text-center">
+                    <div class="stat-value" id="statAvgPrice">-</div>
+                    <div class="stat-label">Average Price</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card text-center">
+                    <div class="stat-value" id="statRegistered">-</div>
+                    <div class="stat-label">Registered</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card text-center">
+                    <div class="stat-value" id="statTopMfg">-</div>
+                    <div class="stat-label">Top Manufacturer</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading today's listings...</p>
+            </div>
+            <div class="table-responsive" id="tableContainer" style="display:none;">
+                <table id="listingTable" class="table table-striped table-hover">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        let listingTable;
+
+        function formatPrice(val) {
+            if (val == null || val === '') return '';
+            if (typeof val === 'number') return '$' + val.toLocaleString();
+            return val;
+        }
+
+        function formatMileage(val) {
+            if (val == null || val === '') return '';
+            if (typeof val === 'number') return val.toLocaleString();
+            return val;
+        }
+
+        $.fn.dataTable.ext.search.push(
+            function(settings, data, dataIndex) {
+                var showRegisteredOnly = $('#showRegisteredOnly').is(':checked');
+                if (!showRegisteredOnly) return true;
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i] && data[i].toLowerCase().trim() === 'yes') return true;
+                }
+                return false;
+            }
+        );
+
+        async function loadListings() {
+            try {
+                const response = await fetch('/data/api/latest_listings.json');
+                if (!response.ok) throw new Error('Failed to load data');
+
+                const data = await response.json();
+                const { stats, columns, listings } = data;
+
+                document.getElementById('fileDate').textContent = 'Data as of ' + stats.file_date;
+                document.getElementById('statTotal').textContent = stats.total.toLocaleString();
+                document.getElementById('statAvgPrice').textContent = '$' + (stats.avg_price ? stats.avg_price.toLocaleString() : '0');
+                document.getElementById('statRegistered').textContent = stats.registered.toLocaleString();
+                document.getElementById('statTopMfg').textContent = stats.top_manufacturer;
+
+                const thead = document.querySelector('#listingTable thead');
+                let headerHtml = '<tr>';
+                columns.forEach(col => {
+                    headerHtml += '<th>' + col + '</th>';
+                });
+                headerHtml += '</tr>';
+                thead.innerHTML = headerHtml;
+
+                const tbody = document.querySelector('#listingTable tbody');
+                let bodyHtml = '';
+                listings.forEach(row => {
+                    bodyHtml += '<tr>';
+                    columns.forEach(col => {
+                        let val = row[col] || '';
+                        if (col === 'Link' && val) {
+                            val = '<a href="' + val + '" target="_blank">View</a>';
+                        }
+                        bodyHtml += '<td>' + val + '</td>';
+                    });
+                    bodyHtml += '</tr>';
+                });
+                tbody.innerHTML = bodyHtml;
+
+                listingTable = $('#listingTable').DataTable({
+                    pageLength: 50,
+                    order: [[0, 'asc']],
+                    responsive: true,
+                    lengthMenu: [[25, 50, 100, -1], [25, 50, 100, "All"]]
+                });
+
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('tableContainer').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading listings:', error);
+                document.getElementById('loadingSpinner').innerHTML = '<p class="text-danger">Error loading data. Please try again later.</p>';
+                document.getElementById('fileDate').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        $('#showRegisteredOnly').on('change', function() {
+            if (listingTable) listingTable.draw();
+        });
+
+        document.addEventListener('DOMContentLoaded', loadListings);
+    </script>
+</body>
+</html>
