@@ -5,19 +5,14 @@
   skip_processing = true
 
 [[redirects]]
-  from = "/home"
-  to = "/home.html"
-  status = 200
-
-[[redirects]]
   from = "/analytics"
   to = "/analytics.html"
   status = 200
 
 [[redirects]]
   from = "/api-docs"
-  to = "/api-docs.html"
-  status = 200
+  to = "/analytics"
+  status = 301
 
 [[redirects]]
   from = "/about"
