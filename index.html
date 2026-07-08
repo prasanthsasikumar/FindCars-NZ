@@ -34,9 +34,12 @@
         .nav .inner { display: flex; align-items: center; justify-content: space-between; height: 56px; max-width: 1280px; margin: 0 auto }
         .nav .logo { font-weight: 700; font-size: 1rem; color: var(--heading); text-decoration: none; letter-spacing: -.2px }
         .nav .logo i { color: var(--p); margin-right: 7px }
-        .nav .gh { color: var(--muted); text-decoration: none; font-weight: 500; font-size: .88rem; transition: color .2s }
+        .nav .gh { color: var(--muted); text-decoration: none; font-weight: 500; font-size: 1.05rem; transition: color .2s }
         .nav .gh:hover { color: var(--p) }
-        @media (max-width: 768px) { .nav { padding: 0 20px } }
+        .nav-links { display: flex; align-items: center; gap: 28px }
+        .nav-links a { color: var(--muted); text-decoration: none; font-weight: 500; font-size: .88rem; transition: color .15s }
+        .nav-links a:hover { color: var(--p) }
+        @media (max-width: 768px) { .nav-links { display: none } .nav { padding: 0 20px } }
 
         /* Hero */
         .hero { padding: 88px 0 56px; text-align: center; background: linear-gradient(180deg, #f8faff 0%, #fff 100%) }
@@ -50,8 +53,8 @@
         @media (max-width: 768px) { .hero { padding: 56px 0 40px } .hero .kpi-row { grid-template-columns: repeat(2,1fr) } }
 
         /* Section */
-        .section { padding: 80px 0 }
-        .section.alt { background: #f8fafb; border-top: 1px solid var(--b); border-bottom: 1px solid var(--b) }
+        .section { padding: 80px 0; scroll-margin-top: 72px }
+        .section.alt { background: #f8fafb; border-top: 1px solid var(--b); border-bottom: 1px solid var(--b); scroll-margin-top: 72px }
         .section-label { font-size: .78rem; font-weight: 600; color: var(--p); text-transform: uppercase; letter-spacing: 1.8px; margin-bottom: 8px }
         .section h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 600; color: var(--heading); letter-spacing: -.4px; margin-bottom: 12px }
         .section .sub { color: var(--body); font-size: 1.02rem; line-height: 1.6; max-width: 600px; margin-bottom: 32px }
@@ -120,7 +123,14 @@
 <!-- Nav -->
 <nav class="nav" id="nav"><div class="inner">
     <a class="logo" href="/"><i class="fas fa-chart-line"></i>CarAuction Analytics</a>
-    <a class="gh" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+    <div class="nav-links">
+        <a href="#listings">Listings</a>
+        <a href="#analytics">Analytics</a>
+        <a href="#api">API</a>
+        <a href="#data">Data</a>
+        <a href="#about">About</a>
+    </div>
+    <a class="gh" href="https://github.com/prasanthsasikumar/CarAuction-Analytics-NZ" target="_blank"><i class="fab fa-github"></i></a>
 </div></nav>
 
 <!-- Hero -->
@@ -136,7 +146,7 @@
 </div></section>
 
 <!-- Today's Listings -->
-<section class="section"><div class="mw">
+<section class="section" id="listings"><div class="mw">
     <div class="section-label">Latest Data</div>
     <h2>Today's Listings</h2>
     <p class="sub" id="listingFileDate">Loading&hellip;</p>
@@ -156,7 +166,7 @@
 </div></section>
 
 <!-- Market Analytics -->
-<section class="section alt"><div class="mw">
+<section class="section alt" id="analytics"><div class="mw">
     <div class="section-label">Market Insights</div>
     <h2>Market Analytics</h2>
     <p class="sub">Trends, distributions, and manufacturer breakdowns from over 460,000 auction records.</p>
@@ -172,7 +182,7 @@
 </div></section>
 
 <!-- REST API -->
-<section class="section"><div class="mw">
+<section class="section" id="api"><div class="mw">
     <div class="section-label">Programmatic Access</div>
     <h2>REST API</h2>
     <p class="sub">Free, no authentication required. All data is pre-computed as static JSON — updated daily. Base URL: <code>https://findcars.prasanthsasikumar.com/api/v1</code></p>
@@ -198,7 +208,7 @@ fetch("https://findcars.prasanthsasikumar.com/api/v1/manufacturers")
 </div></section>
 
 <!-- Data Downloads -->
-<section class="section alt"><div class="mw">
+<section class="section alt" id="data"><div class="mw">
     <div class="section-label">Open Data</div>
     <h2>Data Downloads</h2>
     <p class="sub">All datasets are publicly available on GitHub under the MIT license.</p>
@@ -211,7 +221,7 @@ fetch("https://findcars.prasanthsasikumar.com/api/v1/manufacturers")
 </div></section>
 
 <!-- About -->
-<section class="section"><div class="mw">
+<section class="section" id="about"><div class="mw">
     <div class="section-label">About</div>
     <h2>About This Project</h2>
     <div class="card">
