@@ -272,7 +272,7 @@ async function loadListings() {
         document.getElementById('listingCount').textContent = stats.total.toLocaleString() + ' vehicles';
         let h = '<tr>'; columns.forEach(c => h += '<th>'+c+'</th>'); h += '</tr>';
         document.querySelector('#listingTable thead').innerHTML = h;
-        let b = ''; listings.forEach(row => { b += '<tr>'; columns.forEach(c => { let v = row[c] || ''; if (c === 'Link' && v) v = '<a href="'+v+'" target="_blank" style="color:var(--p);font-weight:500">View</a>'; b += '<td>'+v+'</td>' }); b += '</tr>' });
+        let b = ''; listings.forEach(row => { b += '<tr>'; columns.forEach(c => { let v = row[c] || ''; if (c === 'Link') return; if (['Manufacturer','Model','Damage description'].includes(c) && row['Link']) { v = '<a href="'+row['Link']+'" target="_blank" style="color:var(--p);font-weight:500;text-decoration:none" title="View on Manheim">'+v+'</a>' } b += '<td>'+v+'</td>' }); b += '</tr>' });
         document.querySelector('#listingTable tbody').innerHTML = b;
         dt = $('#listingTable').DataTable({ pageLength: 50, order: [[0,'asc']], responsive: true, lengthMenu: [[25,50,100,-1],[25,50,100,'All']], language: { info: '_START_–_END_ of _TOTAL_', infoEmpty: '0 listings', zeroRecords: 'No matching listings' } });
         document.getElementById('listingLoading').style.display = 'none';

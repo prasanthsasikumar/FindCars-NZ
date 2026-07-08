@@ -187,12 +187,13 @@ def generate_latest_listings():
     }
 
     priority_columns = ['Manufacturer', 'Model', 'Year', 'Price', 'Mileage', 'Damage description', 'Link']
-    other_columns = [col for col in df.columns if col not in priority_columns and col not in ('Price_Clean', 'Mileage_Clean')]
+    excluded_cols = ['Price_Clean', 'Mileage_Clean', 'Keys']
+    other_columns = [col for col in df.columns if col not in priority_columns and col not in excluded_cols]
     columns_order = priority_columns + other_columns
     display_data = df[columns_order].copy()
 
     # Clean up float formatting for integer columns
-    integer_cols = ['Year', 'Seats', 'Keys']
+    integer_cols = ['Year', 'Seats']
     for col in integer_cols:
         if col in display_data.columns:
             display_data[col] = display_data[col].apply(lambda x: str(int(x)) if pd.notna(x) and str(x).replace('.0','').isdigit() else (str(x) if pd.notna(x) else ''))
