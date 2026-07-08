@@ -191,6 +191,12 @@ def generate_latest_listings():
     columns_order = priority_columns + other_columns
     display_data = df[columns_order].copy()
 
+    # Clean up float formatting for integer columns
+    integer_cols = ['Year', 'Seats', 'Keys']
+    for col in integer_cols:
+        if col in display_data.columns:
+            display_data[col] = display_data[col].apply(lambda x: str(int(x)) if pd.notna(x) and str(x).replace('.0','').isdigit() else (str(x) if pd.notna(x) else ''))
+
     listings = []
     for _, row in display_data.iterrows():
         listing = {}
