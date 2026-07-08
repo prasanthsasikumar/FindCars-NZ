@@ -3,10 +3,10 @@
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**FindCars NZ** (this repo: CarAuction-Analytics-NZ) is a data platform tracking damaged-vehicle auction listings from Manheim New Zealand. Three years of daily scraping — **1,131 days and 660,000+ raw records** — served as an interactive dashboard, open datasets, and a free static JSON API.
+**FindCars NZ** (this repo: CarAuction-Analytics-NZ) is a data platform tracking damaged-vehicle auction listings from Manheim New Zealand. Three years of daily scraping (**1,131 days and 660,000+ raw records**) served as an interactive dashboard, open datasets, and a free static JSON API.
 
 🔗 **Live site:** [findcars.prasanthsasikumar.com](https://findcars.prasanthsasikumar.com)
-📖 **The story:** a three-part blog series — [the data](https://prasanthsasikumar.com/posts/nz-car-auction-data-pipeline) · [the analytics](https://prasanthsasikumar.com/posts/nz-car-auction-analytics) · [the prediction model](https://prasanthsasikumar.com/posts/nz-car-auction-price-prediction)
+📖 **The story:** a three-part blog series: [the data](https://prasanthsasikumar.com/posts/nz-car-auction-data-pipeline) · [the analytics](https://prasanthsasikumar.com/posts/nz-car-auction-analytics) · [the prediction model](https://prasanthsasikumar.com/posts/nz-car-auction-price-prediction)
 🔮 **Price predictor:** [nz-car-auction.streamlit.app](https://nz-car-auction.streamlit.app/)
 
 ## ✨ Features
@@ -282,7 +282,7 @@ This data is for informational and research purposes only. Prices and availabili
 
 ## 🔮 Future Plans
 
-- [x] Implement XGBoost price prediction model — live at [nz-car-auction.streamlit.app](https://nz-car-auction.streamlit.app/)
+- [x] Implement XGBoost price prediction model, live at [nz-car-auction.streamlit.app](https://nz-car-auction.streamlit.app/)
 - [ ] Add email price alerts for tracked vehicles
 - [ ] Expand to other auction platforms
 - [ ] Build recommendation engine
