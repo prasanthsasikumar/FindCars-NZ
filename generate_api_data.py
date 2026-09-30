@@ -13,15 +13,18 @@ from pathlib import Path
 DATA_RAW_DIR = Path("data/raw")
 DATA_PROCESSED_DIR = Path("data/processed")
 DATA_API_DIR = Path("data/api")
+MIN_PRICED_LISTINGS = 20
 
 
 def clean_price(price_str):
     if pd.isna(price_str) or str(price_str) == 'N/A':
         return None
     try:
-        return float(str(price_str).replace('$', '').replace(',', '').strip())
+        price = float(str(price_str).replace('$', '').replace(',', '').strip())
     except (ValueError, AttributeError):
         return None
+    # Manheim shows $0 when a listing has no price yet, so treat it as missing
+    return price if price > 0 else None
 
 
 def clean_mileage(mileage_str):
@@ -90,13 +93,15 @@ def generate_price_trends():
 
         valid_prices = df['Price_Clean'].dropna()
 
-        if len(valid_prices) > 0:
-            trends.append({
-                'date': date_str,
-                'avg_price': float(round(valid_prices.mean(), 2)),
-                'median_price': float(round(valid_prices.median(), 2)),
-                'count': int(len(df))
-            })
+        # Keep every sampled day for the listing count, but leave prices empty
+        # when too few listings carry a price to give a meaningful average
+        has_prices = len(valid_prices) >= MIN_PRICED_LISTINGS
+        trends.append({
+            'date': date_str,
+            'avg_price': float(round(valid_prices.mean(), 2)) if has_prices else None,
+            'median_price': float(round(valid_prices.median(), 2)) if has_prices else None,
+            'count': int(len(df))
+        })
 
     return trends
 
@@ -157,7 +162,7 @@ def generate_price_distribution():
     valid_prices = df['Price_Clean'].dropna()
 
     distribution = {
-        '$0-$500': int(((valid_prices >= 0) & (valid_prices < 500)).sum()),
+        '$1-$500': int((valid_prices < 500).sum()),
         '$500-$1k': int(((valid_prices >= 500) & (valid_prices < 1000)).sum()),
         '$1k-$2k': int(((valid_prices >= 1000) & (valid_prices < 2000)).sum()),
         '$2k-$5k': int(((valid_prices >= 2000) & (valid_prices < 5000)).sum()),

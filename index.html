@@ -335,7 +335,7 @@ fetch("https://findcars.prasanthsasikumar.com/api/v1/manufacturers")
 <section class="section alt" id="story"><div class="mw">
     <div class="section-label">Behind the Project</div>
     <h2>The Story</h2>
-    <p class="sub">This dashboard started as a PhD-budget side hustle: buying damaged cars at insurance auctions, fixing them, and selling them on. The full write-up is a three-part series on <a href="https://prasanthsasikumar.com/series/NZCarAuctions" target="_blank">prasanthsasikumar.com</a>.</p>
+    <p class="sub">This dashboard started with buying damaged cars at insurance auctions, some to drive around and some for the track. I've since moved to Singapore, but left the scraper running because mates back in NZ were still using it. The full write-up is a three-part series on <a href="https://prasanthsasikumar.com/series/NZCarAuctions" target="_blank">prasanthsasikumar.com</a>.</p>
     <div class="story-grid">
         <a class="story-card" href="https://prasanthsasikumar.com/posts/nz-car-auction-data-pipeline" target="_blank">
             <div class="part">Part 1 · The Data</div>
@@ -528,8 +528,8 @@ function renderTrends() {
     charts.trends = new Chart(document.getElementById('cTrends'), {
         type: 'line',
         data: { labels: dates, datasets: [
-            { label: 'Avg Price', data: d.map(x => x.avg_price), borderColor: p.primary, backgroundColor: hexA(p.primary, .05), tension: .3, fill: true, pointRadius: 0, borderWidth: 2 },
-            { label: 'Median', data: d.map(x => x.median_price), borderColor: p.secondary, backgroundColor: 'transparent', tension: .3, pointRadius: 0, borderWidth: 2 }
+            { label: 'Avg Price', data: d.map(x => x.avg_price), borderColor: p.primary, backgroundColor: hexA(p.primary, .05), tension: .3, fill: true, pointRadius: 0, borderWidth: 2, spanGaps: true },
+            { label: 'Median', data: d.map(x => x.median_price), borderColor: p.secondary, backgroundColor: 'transparent', tension: .3, pointRadius: 0, borderWidth: 2, spanGaps: true }
         ] },
         options: { responsive: true, interaction: { intersect: false, mode: 'index' }, plugins: { legend: legendOpts() }, scales: axes() }
     });
