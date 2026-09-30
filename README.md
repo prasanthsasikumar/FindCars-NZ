@@ -145,7 +145,7 @@ Returns aggregated statistics from the most recent 30 days.
 GET /api/v1/stats/price-trends
 ```
 
-Returns historical price trends (sampled every 7 days).
+Returns weekly price trends (all days in each week) with average daily listing counts.
 
 #### Search Vehicles
 ```http

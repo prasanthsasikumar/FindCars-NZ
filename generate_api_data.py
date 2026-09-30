@@ -85,22 +85,27 @@ def generate_overview():
 def generate_price_trends():
     csv_files = sorted(glob.glob(str(DATA_RAW_DIR / "car_data_*.csv")))
 
+    # Group every daily file into its week. Sampling a single day per week
+    # always hit the same weekday, which is often the day before prices are set.
+    weeks = {}
+    for file in csv_files:
+        date = datetime.date.fromisoformat(Path(file).stem.replace('car_data_', ''))
+        week_start = date - datetime.timedelta(days=date.weekday())
+        df = pd.read_csv(file, usecols=['Price'])
+        week = weeks.setdefault(week_start, {'prices': [], 'daily_counts': []})
+        week['prices'].extend(df['Price'].apply(clean_price).dropna())
+        week['daily_counts'].append(len(df))
+
     trends = []
-    for file in csv_files[::7]:
-        date_str = Path(file).stem.replace('car_data_', '')
-        df = pd.read_csv(file)
-        df['Price_Clean'] = df['Price'].apply(clean_price)
-
-        valid_prices = df['Price_Clean'].dropna()
-
-        # Keep every sampled day for the listing count, but leave prices empty
-        # when too few listings carry a price to give a meaningful average
-        has_prices = len(valid_prices) >= MIN_PRICED_LISTINGS
+    for week_start in sorted(weeks):
+        prices = pd.Series(weeks[week_start]['prices'], dtype=float)
+        counts = weeks[week_start]['daily_counts']
+        has_prices = len(prices) >= MIN_PRICED_LISTINGS
         trends.append({
-            'date': date_str,
-            'avg_price': float(round(valid_prices.mean(), 2)) if has_prices else None,
-            'median_price': float(round(valid_prices.median(), 2)) if has_prices else None,
-            'count': int(len(df))
+            'date': str(week_start),
+            'avg_price': float(round(prices.mean(), 2)) if has_prices else None,
+            'median_price': float(round(prices.median(), 2)) if has_prices else None,
+            'count': int(round(sum(counts) / len(counts)))
         })
 
     return trends
@@ -234,7 +239,7 @@ def main():
     if trends:
         with open(DATA_API_DIR / "price_trends.json", "w") as f:
             json.dump(trends, f)
-        print(f"  ✓ {len(trends)} data points (sampled weekly)")
+        print(f"  ✓ {len(trends)} weekly data points")
 
     # Manufacturers
     print("[3/6] Generating manufacturer analysis...")
